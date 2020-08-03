@@ -59,7 +59,7 @@ def format(_pattern, _quote_all=False, **kwargs):
 #  adapted from Job.format_wildcards in snakemake.jobs
 def format_wildcards(string, job_properties):
     """ Format a string with variables from the job. """
-    
+
     class Job(object):
         def __init__(self, job_properties):
             for key in job_properties:
@@ -100,12 +100,16 @@ def format_values(dictionary, job_properties):
                 )
                 raise WorkflowError(msg, e)
     return formatted
-    
+
 def convert_job_properties(job_properties, resource_mapping={}):
     options = {}
     resources = job_properties.get("resources", {})
     for k, v in resource_mapping.items():
         options.update({k: resources[i] for i in v if i in resources})
+
+    for gpu_key in ("gpus", "gpu"):
+        if gpu_key in resources:
+            options["gres"] = "gpu:{}".format(resources[gpu_key])
 
     if "threads" in job_properties:
         options["cpus-per-task"] = job_properties["threads"]
